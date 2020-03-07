@@ -69,6 +69,11 @@ func (p Problems) RandomSelectByPoints(points []float64) Problems {
 			}
 		}
 
+		// 対象の点数が存在しない場合はスキップ
+		if len(tmp) == 0 {
+			continue
+		}
+
 		i := rand.Intn(len(tmp))
 		selected = append(selected, tmp[i])
 	}
