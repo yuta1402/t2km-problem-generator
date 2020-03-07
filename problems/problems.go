@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	AtCoderContestEndpoint  = "https://atcoder.jp/contests/"
 	AtCoderProblemsEndpoint = "https://kenkoooo.com/atcoder/resources/"
 )
 
@@ -16,6 +17,16 @@ type Problem struct {
 	ContestID string  `json:"contest_id"`
 	Title     string  `json:"title"`
 	Point     float64 `json:"point"`
+}
+
+func (p Problem) URL() (string, error) {
+	u, err := url.Parse(AtCoderContestEndpoint)
+	if err != nil {
+		return "", err
+	}
+
+	u.Path = path.Join(u.Path, p.ContestID, "/tasks", p.ID)
+	return u.String(), nil
 }
 
 type Problems []Problem
