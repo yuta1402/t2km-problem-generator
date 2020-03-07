@@ -5,6 +5,6 @@ services:
     image: go-phantomjs
     container_name: go-phantomjs
     tty: true
-    working_dir: /go/src/app
+    working_dir: /go/src/github.com/yuta1402/t2km-problem-generator
     volumes:
-      - ./:/go/src/app
+      - ./:/go/src/github.com/yuta1402/t2km-problem-generator
