@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sclevine/agouti"
+	"github.com/yuta1402/t2km-problem-generator/problems"
 )
 
 func main() {
@@ -33,4 +34,12 @@ func main() {
 		return
 	}
 	fmt.Println(src)
+
+	problems, err := problems.Get()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
+
+	fmt.Println(len(problems))
 }
