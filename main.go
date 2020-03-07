@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -35,11 +36,16 @@ func main() {
 	}
 	fmt.Println(src)
 
-	problems, err := problems.Get()
+	problems, err := problems.New()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return
 	}
 
 	fmt.Println(len(problems))
+
+	rand.Seed(time.Now().UnixNano())
+
+	probs := problems.RandomSelectByPoints([]float64{100, 200, 300, 400, 500})
+	fmt.Println(probs)
 }

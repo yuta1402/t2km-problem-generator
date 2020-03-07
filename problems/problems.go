@@ -2,6 +2,7 @@ package problems
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"path"
@@ -31,7 +32,7 @@ func (p Problem) URL() (string, error) {
 
 type Problems []Problem
 
-func Get() (Problems, error) {
+func New() (Problems, error) {
 	u, err := url.Parse(AtCoderProblemsEndpoint)
 	if err != nil {
 		return nil, err
@@ -54,4 +55,23 @@ func Get() (Problems, error) {
 	}
 
 	return problems, nil
+}
+
+func (p Problems) RandomSelectByPoints(points []float64) Problems {
+	selected := Problems{}
+
+	for _, point := range points {
+		tmp := Problems{}
+
+		for _, q := range p {
+			if q.Point == point {
+				tmp = append(tmp, q)
+			}
+		}
+
+		i := rand.Intn(len(tmp))
+		selected = append(selected, tmp[i])
+	}
+
+	return selected
 }
