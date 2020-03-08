@@ -32,31 +32,21 @@ func parsePoints(pointsStr string) ([]float64, error) {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	listCmd := flag.NewFlagSet("list", flag.ExitOnError)
+	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
+	flag.Parse()
 
-	if len(os.Args) == 1 {
-		flag.Usage()
+	fmt.Println(*pointsStr)
+	points, err := parsePoints(*pointsStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "parse points error: %s\n", err)
 		return
 	}
 
-	switch os.Args[1] {
-	case "list":
-		pointsStr := listCmd.String("points", "", "problem points (e.g. 100-200-300-400)")
-		listCmd.Parse(os.Args[2:])
-
-		fmt.Println(*pointsStr)
-		points, err := parsePoints(*pointsStr)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "parse points error: %s\n", err)
-			return
-		}
-
-		problems, err := problems.New()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			return
-		}
-		probs := problems.RandomSelectByPoints(points)
-		fmt.Println(probs)
+	problems, err := problems.New()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
 	}
+	probs := problems.RandomSelectByPoints(points)
+	fmt.Println(probs)
 }
