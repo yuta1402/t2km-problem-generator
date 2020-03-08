@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -13,9 +14,13 @@ import (
 )
 
 func parsePoints(pointsStr string) ([]float64, error) {
-	slice := strings.Split(pointsStr, "-")
-
 	points := []float64{}
+
+	if pointsStr == "" {
+		return points, errors.New("points is empty")
+	}
+
+	slice := strings.Split(pointsStr, "-")
 
 	for _, s := range slice {
 		p, err := strconv.ParseFloat(s, 64)
@@ -35,7 +40,6 @@ func main() {
 	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
 	flag.Parse()
 
-	fmt.Println(*pointsStr)
 	points, err := parsePoints(*pointsStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "parse points error: %s\n", err)
