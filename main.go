@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yuta1402/t2km-problem-generator/contest"
 	"github.com/yuta1402/t2km-problem-generator/problems"
 )
 
@@ -37,6 +38,8 @@ func parsePoints(pointsStr string) ([]float64, error) {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
+	id := flag.String("id", "", "id of atcoder virtual contest")
+	password := flag.String("password", "", "password of atcoder virtual contest")
 	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
 	flag.Parse()
 
@@ -53,4 +56,17 @@ func main() {
 	}
 	probs := problems.RandomSelectByPoints(points)
 	fmt.Println(probs)
+
+	cg, err := contest.NewContestGenerator(*id, *password)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "initialize contest generator error: %s\n", err)
+		return
+	}
+	defer cg.Close()
+
+	err = cg.Login()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "failed to login")
+		return
+	}
 }
