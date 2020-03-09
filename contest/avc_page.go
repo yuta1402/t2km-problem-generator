@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -166,30 +165,4 @@ func (avcPage *AVCPage) GetParticipatedContests() ([]ParticipatedContest, error)
 	})
 
 	return contests, nil
-}
-
-func (avcPage *AVCPage) GetLastContestIndex(contestNamePrefix string) (int, error) {
-	contests, err := avcPage.GetParticipatedContests()
-	if err != nil {
-		return 0, err
-	}
-
-	maxIndex := 0
-
-	for _, c := range contests {
-		if strings.Contains(c.Name, contestNamePrefix) {
-			indexStr := strings.ReplaceAll(c.Name, contestNamePrefix, "")
-			indexStr = strings.TrimSpace(indexStr)
-			index, err := strconv.Atoi(indexStr)
-			if err != nil {
-				continue
-			}
-
-			if index > maxIndex {
-				maxIndex = index
-			}
-		}
-	}
-
-	return maxIndex, nil
 }
