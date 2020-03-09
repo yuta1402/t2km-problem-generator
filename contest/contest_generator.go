@@ -1,7 +1,6 @@
 package contest
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -9,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sclevine/agouti"
 	"github.com/yuta1402/t2km-problem-generator/problem"
 )
 
@@ -17,8 +15,7 @@ type ContestGenerator struct {
 	ID       string
 	Password string
 
-	driver *agouti.WebDriver
-	page   *agouti.Page
+	avcPage *AVCPage
 }
 
 type Option struct {
@@ -31,27 +28,8 @@ type Option struct {
 	Problems    problem.Problems
 }
 
-// const (
-// 	AtCoderVirtualContestEndpoint = "https://not-522.appspot.com/"
-// 	UserAgent                     = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36"
-// )
-//
-// func CapabilitiesOption() agouti.Option {
-// 	capabilities := agouti.NewCapabilities()
-// 	capabilities["phantomjs.page.settings.userAgent"] = UserAgent
-// 	capabilitiesOption := agouti.Desired(capabilities)
-// 	return capabilitiesOption
-// }
-
 func NewContestGenerator(id string, password string) (*ContestGenerator, error) {
-	capabilitiesOption := CapabilitiesOption()
-
-	driver := agouti.PhantomJS(capabilitiesOption)
-	if err := driver.Start(); err != nil {
-		return nil, err
-	}
-
-	page, err := driver.NewPage()
+	avcPage, err := NewAVCPage()
 	if err != nil {
 		return nil, err
 	}
@@ -59,52 +37,19 @@ func NewContestGenerator(id string, password string) (*ContestGenerator, error) 
 	cg := &ContestGenerator{
 		ID:       id,
 		Password: password,
-		driver:   driver,
-		page:     page,
+		avcPage:  avcPage,
 	}
 
 	return cg, nil
 }
 
 func (cg *ContestGenerator) Close() {
-	cg.driver.Stop()
+	cg.avcPage.Close()
 }
 
 func (cg *ContestGenerator) Login() error {
-	p := cg.page
-
-	u, err := url.Parse(AtCoderVirtualContestEndpoint)
-	if err != nil {
+	if err := cg.avcPage.Login(cg.ID, cg.Password); err != nil {
 		return err
-	}
-
-	u.Path = path.Join(u.Path, "/login")
-	if err := p.Navigate(u.String()); err != nil {
-		return err
-	}
-
-	time.Sleep(1 * time.Second)
-
-	if err := p.FindByName("id").Fill(cg.ID); err != nil {
-		return err
-	}
-
-	if err := p.FindByName("password").Fill(cg.Password); err != nil {
-		return err
-	}
-
-	if err := p.Find("form > button").Submit(); err != nil {
-		return err
-	}
-
-	url, err := p.URL()
-	if err != nil {
-		return err
-	}
-
-	// ログインページに戻されてしまった場合はログイン失敗
-	if url == u.String() {
-		return errors.New("failed to login")
 	}
 
 	return nil
@@ -129,7 +74,10 @@ func CorrectTime(t time.Time) time.Time {
 }
 
 func (cg *ContestGenerator) Generate(option Option) error {
-	p := cg.page
+	p, err := cg.avcPage.NewPage()
+	if err != nil {
+		return err
+	}
 
 	u, err := url.Parse(AtCoderVirtualContestEndpoint)
 	if err != nil {
@@ -229,45 +177,5 @@ func (cg *ContestGenerator) Generate(option Option) error {
 }
 
 func (cg *ContestGenerator) GetLastContestIndex(contestNamePrefix string) (int, error) {
-	p := cg.page
-
-	u, err := url.Parse(AtCoderVirtualContestEndpoint)
-	if err != nil {
-		return 0, err
-	}
-
-	u.Path = path.Join(u.Path, "/participated")
-	if err := p.Navigate(u.String()); err != nil {
-		return 0, err
-	}
-
-	contests := p.Find("body > div > table > tbody").All("tr > td:nth-child(1) > a")
-	count, err := contests.Count()
-	if err != nil {
-		return 0, err
-	}
-
-	maxIndex := 0
-
-	for i := 0; i < count; i++ {
-		name, err := contests.At(i).Text()
-		if err != nil {
-			return 0, err
-		}
-
-		if strings.Contains(name, contestNamePrefix) {
-			indexStr := strings.ReplaceAll(name, contestNamePrefix, "")
-			indexStr = strings.TrimSpace(indexStr)
-			index, err := strconv.Atoi(indexStr)
-			if err != nil {
-				continue
-			}
-
-			if index > maxIndex {
-				maxIndex = index
-			}
-		}
-	}
-
-	return maxIndex, nil
+	return cg.avcPage.GetLastContestIndex(contestNamePrefix)
 }
