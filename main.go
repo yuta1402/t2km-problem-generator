@@ -90,9 +90,11 @@ func main() {
 		Problems:    probs,
 	}
 
-	err = cg.Generate(option)
+	cc, err := cg.Generate(option)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return
 	}
+
+	fmt.Println(cc.URL)
 }
