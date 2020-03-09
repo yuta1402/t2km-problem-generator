@@ -42,6 +42,11 @@ type ContestOption struct {
 	Problems    problem.Problems
 }
 
+type CoordinatedContest struct {
+	Option ContestOption
+	URL    string
+}
+
 type ParticipatedContest struct {
 	Name         string
 	StartTimeStr string
@@ -162,10 +167,10 @@ func makeDayHourMinute(t time.Time) (string, string, string) {
 	return d, h, m
 }
 
-func (avcPage *AVCPage) CoordinateContest(option ContestOption) error {
+func (avcPage *AVCPage) CoordinateContest(option ContestOption) (*CoordinatedContest, error) {
 	p, err := avcPage.NewPageWithPath("/coordinate")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	startDay, startHour, startMinute := makeDayHourMinute(option.StartTime)
@@ -191,7 +196,7 @@ func (avcPage *AVCPage) CoordinateContest(option ContestOption) error {
 			e.SendKeys("\uE00C")
 
 			if err := e.Fill(o.value); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -212,47 +217,51 @@ func (avcPage *AVCPage) CoordinateContest(option ContestOption) error {
 			e := p.FindByName(o.name)
 
 			if err := e.Select(o.value); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
 	if option.Private {
 		if err := p.FindByName("private").Check(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if err := p.Find("body > div.container > form > div:nth-child(6) > button").Submit(); err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, prob := range option.Problems {
 		url, err := prob.URL()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		urlElement := p.Find("body > div.container > div > form:nth-child(5) > div > input")
 		if err := urlElement.Fill(url); err != nil {
-			return err
+			return nil, err
 		}
 
 		submitElement := p.Find("body > div.container > div > form:nth-child(5) > button")
 		if err := submitElement.Submit(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	contestURL, err := p.URL()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	contestURL = strings.ReplaceAll(contestURL, "setting", "contest")
-	fmt.Println(contestURL)
 
-	return nil
+	cc := &CoordinatedContest{
+		Option: option,
+		URL:    contestURL,
+	}
+
+	return cc, nil
 }
 
 func (avcPage *AVCPage) GetParticipatedContests() ([]ParticipatedContest, error) {

@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -69,7 +70,10 @@ func (cg *ContestGenerator) Generate(option Option) error {
 		Problems:    option.Problems,
 	}
 
-	return cg.avcPage.CoordinateContest(contestOption)
+	cc, err := cg.avcPage.CoordinateContest(contestOption)
+	fmt.Println(cc.URL)
+
+	return err
 }
 
 func (cg *ContestGenerator) GetLastContestIndex(contestNamePrefix string) (int, error) {
