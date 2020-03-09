@@ -65,8 +65,8 @@ func (cg *ContestGenerator) Generate(option Option) error {
 		Description: option.Description,
 		StartTime:   option.StartTime,
 		EndTime:     option.StartTime.Add(option.DurationMin),
-		PenaltyMin:  5,
-		Private:     true,
+		PenaltyMin:  option.PenaltyMin,
+		Private:     option.Private,
 		Problems:    option.Problems,
 	}
 
