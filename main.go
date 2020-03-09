@@ -69,4 +69,30 @@ func main() {
 		fmt.Fprintln(os.Stderr, "failed to login")
 		return
 	}
+
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
+
+	now := time.Now().In(jst)
+	startTime := contest.CorrectTime(now)
+	durationMin := time.Duration(100) * time.Minute
+
+	option := contest.Option{
+		NamePrefix:  "tmp contest",
+		Description: "",
+		StartTime:   startTime,
+		DurationMin: durationMin,
+		PenaltyMin:  5,
+		Private:     true,
+		Problems:    probs,
+	}
+
+	err = cg.Generate(option)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
 }

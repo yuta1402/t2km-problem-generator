@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sclevine/agouti"
+	"github.com/yuta1402/t2km-problem-generator/problems"
 )
 
 type ContestGenerator struct {
@@ -16,6 +18,17 @@ type ContestGenerator struct {
 	Password string
 
 	driver *agouti.WebDriver
+	page   *agouti.Page
+}
+
+type Option struct {
+	NamePrefix  string
+	Description string
+	StartTime   time.Time
+	DurationMin time.Duration
+	PenaltyMin  int
+	Private     bool
+	Problems    problems.Problems
 }
 
 const (
@@ -38,10 +51,16 @@ func NewContestGenerator(id string, password string) (*ContestGenerator, error) 
 		return nil, err
 	}
 
+	page, err := driver.NewPage()
+	if err != nil {
+		return nil, err
+	}
+
 	cg := &ContestGenerator{
 		ID:       id,
 		Password: password,
 		driver:   driver,
+		page:     page,
 	}
 
 	return cg, nil
@@ -52,12 +71,7 @@ func (cg *ContestGenerator) Close() {
 }
 
 func (cg *ContestGenerator) Login() error {
-
-	p, err := cg.driver.NewPage()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return err
-	}
+	p := cg.page
 
 	u, err := url.Parse(AtCoderVirtualContestEndpoint)
 	if err != nil {
@@ -93,6 +107,129 @@ func (cg *ContestGenerator) Login() error {
 	if url == u.String() {
 		return errors.New("failed to login")
 	}
+
+	return nil
+}
+
+func makeDateStr(t time.Time) string {
+	y, m, d := t.Date()
+	return fmt.Sprintf("%04d/%02d/%02d", y, m, d)
+}
+
+func makeDayHourMinute(t time.Time) (string, string, string) {
+	d := makeDateStr(t)
+	h := strconv.Itoa(t.Hour())
+	m := strconv.Itoa(t.Minute())
+	return d, h, m
+}
+
+// 時刻が5分刻みになるように補正 (AtCoderVirtualContestの仕様)
+func CorrectTime(t time.Time) time.Time {
+	t = t.Add(time.Duration(4-((4+t.Minute())%5)) * time.Minute)
+	return t
+}
+
+func (cg *ContestGenerator) Generate(option Option) error {
+	p := cg.page
+
+	u, err := url.Parse(AtCoderVirtualContestEndpoint)
+	if err != nil {
+		return err
+	}
+
+	u.Path = path.Join(u.Path, "/coordinate")
+	if err := p.Navigate(u.String()); err != nil {
+		return err
+	}
+
+	src, _ := p.HTML()
+	fmt.Println(src)
+
+	startDay, startHour, startMinute := makeDayHourMinute(option.StartTime)
+	endDay, endHour, endMinute := makeDayHourMinute(option.StartTime.Add(option.DurationMin))
+
+	// <input>の入力項目を処理
+	{
+		m := []struct {
+			name  string
+			value string
+		}{
+			{"title", option.NamePrefix},
+			{"description", option.Description},
+			{"start_day", startDay},
+			{"end_day", endDay},
+			{"penalty", strconv.Itoa(option.PenaltyMin)},
+		}
+
+		fmt.Println(startHour, startMinute, endHour, endMinute, strconv.Itoa(option.PenaltyMin))
+
+		for _, o := range m {
+			e := p.FindByName(o.name)
+
+			// Send ESC key for hidden calendar
+			e.SendKeys("\uE00C")
+
+			if err := e.Fill(o.value); err != nil {
+				return err
+			}
+		}
+	}
+
+	// <select>の入力項目を処理
+	{
+		m := []struct {
+			name  string
+			value string
+		}{
+			{"start_hour", startHour},
+			{"start_minute", startMinute},
+			{"end_hour", endHour},
+			{"end_minute", endMinute},
+		}
+
+		for _, o := range m {
+			e := p.FindByName(o.name)
+
+			if err := e.Select(o.value); err != nil {
+				return err
+			}
+		}
+	}
+
+	if option.Private {
+		if err := p.FindByName("private").Check(); err != nil {
+			return err
+		}
+	}
+
+	if err := p.Find("body > div.container > form > div:nth-child(6) > button").Submit(); err != nil {
+		return err
+	}
+
+	for _, prob := range option.Problems {
+		url, err := prob.URL()
+		if err != nil {
+			return err
+		}
+
+		urlElement := p.Find("body > div.container > div > form:nth-child(5) > div > input")
+		if err := urlElement.Fill(url); err != nil {
+			return err
+		}
+
+		submitElement := p.Find("body > div.container > div > form:nth-child(5) > button")
+		if err := submitElement.Submit(); err != nil {
+			return err
+		}
+	}
+
+	contestURL, err := p.URL()
+	if err != nil {
+		return err
+	}
+
+	contestURL = strings.ReplaceAll(contestURL, "setting", "contest")
+	fmt.Println(contestURL)
 
 	return nil
 }
