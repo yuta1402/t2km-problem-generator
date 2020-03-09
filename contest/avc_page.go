@@ -138,10 +138,10 @@ func (avcPage *AVCPage) NewPageWithPath(urlPath string) (*agouti.Page, error) {
 	return p, nil
 }
 
-func (avcPage *AVCPage) GetLastContestIndex(contestNamePrefix string) (int, error) {
+func (avcPage *AVCPage) GetParticipatedContests() ([]ParticipatedContest, error) {
 	p, err := avcPage.NewPageWithPath("/participated")
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	html, err := p.HTML()
@@ -164,6 +164,15 @@ func (avcPage *AVCPage) GetLastContestIndex(contestNamePrefix string) (int, erro
 			EndTimeStr:   endTimeStr,
 		})
 	})
+
+	return contests, nil
+}
+
+func (avcPage *AVCPage) GetLastContestIndex(contestNamePrefix string) (int, error) {
+	contests, err := avcPage.GetParticipatedContests()
+	if err != nil {
+		return 0, err
+	}
 
 	maxIndex := 0
 
