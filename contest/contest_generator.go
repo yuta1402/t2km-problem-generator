@@ -227,3 +227,47 @@ func (cg *ContestGenerator) Generate(option Option) error {
 
 	return nil
 }
+
+func (cg *ContestGenerator) GetLastContestIndex(contestNamePrefix string) (int, error) {
+	p := cg.page
+
+	u, err := url.Parse(AtCoderVirtualContestEndpoint)
+	if err != nil {
+		return 0, err
+	}
+
+	u.Path = path.Join(u.Path, "/participated")
+	if err := p.Navigate(u.String()); err != nil {
+		return 0, err
+	}
+
+	contests := p.Find("body > div > table > tbody").All("tr > td:nth-child(1) > a")
+	count, err := contests.Count()
+	if err != nil {
+		return 0, err
+	}
+
+	maxIndex := 0
+
+	for i := 0; i < count; i++ {
+		name, err := contests.At(i).Text()
+		if err != nil {
+			return 0, err
+		}
+
+		if strings.Contains(name, contestNamePrefix) {
+			indexStr := strings.ReplaceAll(name, contestNamePrefix, "")
+			indexStr = strings.TrimSpace(indexStr)
+			index, err := strconv.Atoi(indexStr)
+			if err != nil {
+				continue
+			}
+
+			if index > maxIndex {
+				maxIndex = index
+			}
+		}
+	}
+
+	return maxIndex, nil
+}
