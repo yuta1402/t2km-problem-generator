@@ -86,7 +86,6 @@ func (cg *ContestGenerator) Login() error {
 	time.Sleep(1 * time.Second)
 
 	if err := p.FindByName("id").Fill(cg.ID); err != nil {
-		fmt.Println("test")
 		return err
 	}
 
@@ -142,9 +141,6 @@ func (cg *ContestGenerator) Generate(option Option) error {
 		return err
 	}
 
-	src, _ := p.HTML()
-	fmt.Println(src)
-
 	startDay, startHour, startMinute := makeDayHourMinute(option.StartTime)
 	endDay, endHour, endMinute := makeDayHourMinute(option.StartTime.Add(option.DurationMin))
 
@@ -160,8 +156,6 @@ func (cg *ContestGenerator) Generate(option Option) error {
 			{"end_day", endDay},
 			{"penalty", strconv.Itoa(option.PenaltyMin)},
 		}
-
-		fmt.Println(startHour, startMinute, endHour, endMinute, strconv.Itoa(option.PenaltyMin))
 
 		for _, o := range m {
 			e := p.FindByName(o.name)
