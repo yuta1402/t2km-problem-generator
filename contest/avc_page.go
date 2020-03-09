@@ -119,19 +119,28 @@ func (avcPage *AVCPage) NewPage() (*agouti.Page, error) {
 	return p, nil
 }
 
-func (avcPage *AVCPage) GetLastContestIndex(contestNamePrefix string) (int, error) {
+func (avcPage *AVCPage) NewPageWithPath(urlPath string) (*agouti.Page, error) {
 	p, err := avcPage.NewPage()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	u, err := url.Parse(AtCoderVirtualContestEndpoint)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	u.Path = path.Join(u.Path, "/participated")
+	u.Path = path.Join(u.Path, urlPath)
 	if err := p.Navigate(u.String()); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (avcPage *AVCPage) GetLastContestIndex(contestNamePrefix string) (int, error) {
+	p, err := avcPage.NewPageWithPath("/participated")
+	if err != nil {
 		return 0, err
 	}
 
