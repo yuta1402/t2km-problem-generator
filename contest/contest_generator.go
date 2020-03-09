@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -59,8 +60,15 @@ func CorrectTime(t time.Time) time.Time {
 }
 
 func (cg *ContestGenerator) Generate(option Option) (*CoordinatedContest, error) {
+	lastIndex, err := cg.GetLastContestIndex(option.NamePrefix)
+	if err != nil {
+		return nil, err
+	}
+
+	contestName := fmt.Sprintf("%s %03d", option.NamePrefix, lastIndex+1)
+
 	contestOption := ContestOption{
-		Name:        option.NamePrefix,
+		Name:        contestName,
 		Description: option.Description,
 		StartTime:   option.StartTime,
 		EndTime:     option.StartTime.Add(option.DurationMin),
