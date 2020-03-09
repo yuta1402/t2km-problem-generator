@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/yuta1402/t2km-problem-generator/contest"
-	"github.com/yuta1402/t2km-problem-generator/problems"
+	"github.com/yuta1402/t2km-problem-generator/problem"
 )
 
 func parsePoints(pointsStr string) ([]float64, error) {
@@ -49,7 +49,7 @@ func main() {
 		return
 	}
 
-	problems, err := problems.New()
+	problems, err := problem.New()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return

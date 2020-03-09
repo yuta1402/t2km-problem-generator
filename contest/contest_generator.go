@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sclevine/agouti"
-	"github.com/yuta1402/t2km-problem-generator/problems"
+	"github.com/yuta1402/t2km-problem-generator/problem"
 )
 
 type ContestGenerator struct {
@@ -28,7 +28,7 @@ type Option struct {
 	DurationMin time.Duration
 	PenaltyMin  int
 	Private     bool
-	Problems    problems.Problems
+	Problems    problem.Problems
 }
 
 const (
