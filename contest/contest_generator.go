@@ -55,7 +55,7 @@ func (cg *ContestGenerator) Login() error {
 
 // 時刻が5分刻みになるように補正 (AtCoderVirtualContestの仕様)
 func CorrectTime(t time.Time) time.Time {
-	t = t.Add(time.Duration(5-(t.Minute()%5)) * time.Minute)
+	t = t.Add(time.Duration(4-((4+t.Minute())%5)) * time.Minute)
 	return t
 }
 
