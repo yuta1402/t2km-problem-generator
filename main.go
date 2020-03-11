@@ -71,7 +71,8 @@ func main() {
 	id := flag.String("id", "", "id of atcoder virtual contest")
 	password := flag.String("password", "", "password of atcoder virtual contest")
 	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
-	durationMinVal := flag.Int("duration", 100, "duration [min] (default: 100)")
+	durationMin := flag.Int("duration", 100, "duration [min] (default: 100)")
+	penaltyMin := flag.Int("penalty", 5, "penalty time [min] (default: 5)")
 	apiURL := flag.String("api", "", "API of slack")
 	flag.Parse()
 
@@ -110,14 +111,13 @@ func main() {
 
 	now := time.Now().In(jst)
 	startTime := contest.CorrectTime(now)
-	durationMin := time.Duration(*durationMinVal) * time.Minute
 
 	option := contest.Option{
 		NamePrefix:  "tmp contest",
 		Description: "",
 		StartTime:   startTime,
-		DurationMin: durationMin,
-		PenaltyMin:  5,
+		DurationMin: time.Duration(*durationMin) * time.Minute,
+		PenaltyMin:  *penaltyMin,
 		Private:     true,
 		Problems:    probs,
 	}
