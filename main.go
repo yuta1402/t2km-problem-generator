@@ -68,7 +68,6 @@ func postSlack(cc *contest.CoordinatedContest, apiURL string) (*http.Response, e
 func makeStartTime(now time.Time, startWeekday int, startTimeStr string) (time.Time, error) {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return time.Time{}, err
 	}
 
@@ -131,20 +130,20 @@ func main() {
 
 	startTime, err := makeStartTime(now, startWeekday, startTimeStr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
 	}
 	startTime = contest.CorrectTime(startTime)
 
 	points, err := parsePoints(pointsStr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "parse points error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: parse points error: %s\n", err)
 		return
 	}
 
 	problems, err := problem.New()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
 	}
 	probs := problems.RandomSelectByPoints(points)
@@ -152,14 +151,14 @@ func main() {
 
 	cg, err := contest.NewContestGenerator(id, password)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "initialize contest generator error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: initialize contest generator error: %s\n", err)
 		return
 	}
 	defer cg.Close()
 
 	err = cg.Login()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "failed to login")
+		fmt.Fprintln(os.Stderr, "error: failed to login")
 		return
 	}
 
@@ -175,7 +174,7 @@ func main() {
 
 	cc, err := cg.Generate(option)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
 	}
 
@@ -183,7 +182,7 @@ func main() {
 
 	res, err := postSlack(cc, apiURL)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
 	}
 
