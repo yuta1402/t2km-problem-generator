@@ -112,11 +112,11 @@ func main() {
 
 	flag.StringVar(&id, "id", "", "id of atcoder virtual contest")
 	flag.StringVar(&password, "password", "", "password of atcoder virtual contest")
-	flag.StringVar(&pointsStr, "points", "", "problem points (e.g. 100-200-300-400)")
+	flag.StringVar(&pointsStr, "points", "100-200-300-400", "problem points")
 	flag.IntVar(&startWeekday, "start-weekday", int(now.Weekday()), "start weekday Sun=0, Mon=1, ... (default now.Weekday())")
-	flag.StringVar(&startTimeStr, "start-time", "", "start time (e.g. 18:00)")
-	flag.IntVar(&durationMin, "duration", 100, "duration [min] (default: 100)")
-	flag.IntVar(&penaltyMin, "penalty", 5, "penalty time [min] (default: 5)")
+	flag.StringVar(&startTimeStr, "start-time", "21:00", "start time")
+	flag.IntVar(&durationMin, "duration", 100, "duration [min]")
+	flag.IntVar(&penaltyMin, "penalty", 5, "penalty time [min]")
 	flag.StringVar(&apiURL, "api", "", "API of slack")
 
 	flag.VisitAll(func(f *flag.Flag) {
