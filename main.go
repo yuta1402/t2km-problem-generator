@@ -119,6 +119,14 @@ func main() {
 	flag.IntVar(&durationMin, "duration", 100, "duration [min] (default: 100)")
 	flag.IntVar(&penaltyMin, "penalty", 5, "penalty time [min] (default: 5)")
 	flag.StringVar(&apiURL, "api", "", "API of slack")
+
+	flag.VisitAll(func(f *flag.Flag) {
+		n := "T2KM_" + strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
+		if s := os.Getenv(n); s != "" {
+			f.Value.Set(s)
+		}
+	})
+
 	flag.Parse()
 
 	startTime, err := makeStartTime(now, startWeekday, startTimeStr)
