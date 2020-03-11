@@ -65,18 +65,70 @@ func postSlack(cc *contest.CoordinatedContest, apiURL string) (*http.Response, e
 	return res, nil
 }
 
-func main() {
-	rand.Seed(time.Now().UnixNano())
+func makeStartTime(now time.Time, startWeekday int, startTimeStr string) (time.Time, error) {
+	jst, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return time.Time{}, err
+	}
 
-	id := flag.String("id", "", "id of atcoder virtual contest")
-	password := flag.String("password", "", "password of atcoder virtual contest")
-	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
-	durationMin := flag.Int("duration", 100, "duration [min] (default: 100)")
-	penaltyMin := flag.Int("penalty", 5, "penalty time [min] (default: 5)")
-	apiURL := flag.String("api", "", "API of slack")
+	now = time.Now().In(jst)
+
+	diffDay := (startWeekday - int(now.Weekday()) + 7) % 7
+	startDay := now.Day() + diffDay
+
+	a := strings.Split(startTimeStr, ":")
+	if len(a) != 2 {
+		return time.Time{}, errors.New("start time parse error")
+	}
+
+	startHour, err := strconv.Atoi(a[0])
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	startMin, err := strconv.Atoi(a[1])
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	startTime := time.Date(now.Year(), now.Month(), startDay, startHour, startMin, 0, 0, jst)
+	return startTime, nil
+}
+
+func main() {
+	now := time.Now()
+	rand.Seed(now.UnixNano())
+
+	var (
+		id           string
+		password     string
+		pointsStr    string
+		startWeekday int
+		startTimeStr string
+		durationMin  int
+		penaltyMin   int
+		apiURL       string
+	)
+
+	flag.StringVar(&id, "id", "", "id of atcoder virtual contest")
+	flag.StringVar(&password, "password", "", "password of atcoder virtual contest")
+	flag.StringVar(&pointsStr, "points", "", "problem points (e.g. 100-200-300-400)")
+	flag.IntVar(&startWeekday, "start-weekday", int(now.Weekday()), "start weekday Sun=0, Mon=1, ... (default now.Weekday())")
+	flag.StringVar(&startTimeStr, "start-time", "", "start time (e.g. 18:00)")
+	flag.IntVar(&durationMin, "duration", 100, "duration [min] (default: 100)")
+	flag.IntVar(&penaltyMin, "penalty", 5, "penalty time [min] (default: 5)")
+	flag.StringVar(&apiURL, "api", "", "API of slack")
 	flag.Parse()
 
-	points, err := parsePoints(*pointsStr)
+	startTime, err := makeStartTime(now, startWeekday, startTimeStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
+	startTime = contest.CorrectTime(startTime)
+
+	points, err := parsePoints(pointsStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "parse points error: %s\n", err)
 		return
@@ -90,7 +142,7 @@ func main() {
 	probs := problems.RandomSelectByPoints(points)
 	fmt.Println(probs)
 
-	cg, err := contest.NewContestGenerator(*id, *password)
+	cg, err := contest.NewContestGenerator(id, password)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "initialize contest generator error: %s\n", err)
 		return
@@ -103,21 +155,12 @@ func main() {
 		return
 	}
 
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return
-	}
-
-	now := time.Now().In(jst)
-	startTime := contest.CorrectTime(now)
-
 	option := contest.Option{
 		NamePrefix:  "tmp contest",
 		Description: "",
 		StartTime:   startTime,
-		DurationMin: time.Duration(*durationMin) * time.Minute,
-		PenaltyMin:  *penaltyMin,
+		DurationMin: time.Duration(durationMin) * time.Minute,
+		PenaltyMin:  penaltyMin,
 		Private:     true,
 		Problems:    probs,
 	}
@@ -130,7 +173,7 @@ func main() {
 
 	fmt.Println(cc.URL)
 
-	res, err := postSlack(cc, *apiURL)
+	res, err := postSlack(cc, apiURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return
