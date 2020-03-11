@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +16,10 @@ import (
 	"github.com/yuta1402/t2km-problem-generator/contest"
 	"github.com/yuta1402/t2km-problem-generator/problem"
 )
+
+type RequestData struct {
+	Text string `json:"text"`
+}
 
 func parsePoints(pointsStr string) ([]float64, error) {
 	points := []float64{}
@@ -35,12 +42,36 @@ func parsePoints(pointsStr string) ([]float64, error) {
 	return points, nil
 }
 
+func postSlack(cc *contest.CoordinatedContest, apiURL string) (*http.Response, error) {
+	text := "*「" + cc.Option.Name + "」開催のお知らせ*\n" +
+		"日時: " + cc.Option.StartTime.Format("2006/01/02 15:04") + "-\n" +
+		"会場: " + cc.URL + "\n" +
+		"参加できる方は:ok: 絵文字、参加できない方は:ng: 絵文字でお知らせください。"
+
+	d := RequestData{
+		Text: text,
+	}
+
+	json, err := json.Marshal(d)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.Post(apiURL, "application/json", bytes.NewBuffer([]byte(json)))
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	id := flag.String("id", "", "id of atcoder virtual contest")
 	password := flag.String("password", "", "password of atcoder virtual contest")
 	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
+	apiURL := flag.String("api", "", "API of slack")
 	flag.Parse()
 
 	points, err := parsePoints(*pointsStr)
@@ -97,4 +128,12 @@ func main() {
 	}
 
 	fmt.Println(cc.URL)
+
+	res, err := postSlack(cc, *apiURL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return
+	}
+
+	fmt.Println(res.Status)
 }
