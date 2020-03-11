@@ -71,7 +71,7 @@ func main() {
 	id := flag.String("id", "", "id of atcoder virtual contest")
 	password := flag.String("password", "", "password of atcoder virtual contest")
 	pointsStr := flag.String("points", "", "problem points (e.g. 100-200-300-400)")
-	durationMinVal := flag.Int64("duration", 100, "duration [min] (default: 100)")
+	durationMinVal := flag.Int("duration", 100, "duration [min] (default: 100)")
 	apiURL := flag.String("api", "", "API of slack")
 	flag.Parse()
 
