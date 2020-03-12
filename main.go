@@ -103,6 +103,7 @@ func main() {
 		id           string
 		password     string
 		namePrefix   string
+		description  string
 		pointsStr    string
 		startWeekday int
 		startTimeStr string
@@ -114,6 +115,7 @@ func main() {
 	flag.StringVar(&id, "id", "", "id of atcoder virtual contest")
 	flag.StringVar(&password, "password", "", "password of atcoder virtual contest")
 	flag.StringVar(&namePrefix, "name-prefix", "tmp contest", "prefix of contest name")
+	flag.StringVar(&description, "description", "", "contest description")
 	flag.StringVar(&pointsStr, "points", "100-200-300-400", "problem points")
 	flag.IntVar(&startWeekday, "start-weekday", int(now.Weekday()), "start weekday Sun=0, Mon=1, ... (default now.Weekday())")
 	flag.StringVar(&startTimeStr, "start-time", "21:00", "start time")
@@ -166,7 +168,7 @@ func main() {
 
 	option := contest.Option{
 		NamePrefix:  namePrefix,
-		Description: "",
+		Description: description,
 		StartTime:   startTime,
 		DurationMin: time.Duration(durationMin) * time.Minute,
 		PenaltyMin:  penaltyMin,
