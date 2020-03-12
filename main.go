@@ -42,11 +42,16 @@ func parsePoints(pointsStr string) ([]float64, error) {
 	return points, nil
 }
 
-func postSlack(cc *contest.CoordinatedContest, apiURL string) (*http.Response, error) {
+func postSlack(cc *contest.CoordinatedContest, apiURL, pointsStr string) (*http.Response, error) {
+	startTimeStr := cc.Option.StartTime.Format("2006/01/02 15:04")
+	endTimeStr := cc.Option.EndTime.Format("2006/01/02 15:04")
+
 	text := "*「" + cc.Option.Name + "」開催のお知らせ*\n" +
-		"日時: " + cc.Option.StartTime.Format("2006/01/02 15:04") + "-\n" +
+		"日時: " + startTimeStr + " ~ " + endTimeStr + "\n" +
 		"会場: " + cc.URL + "\n" +
-		"参加できる方は:ok: 絵文字、参加できない方は:ng: 絵文字でお知らせください。"
+		"配点: " + pointsStr + " / " +
+		"ペナルティ: " + strconv.Itoa(cc.Option.PenaltyMin) + "分\n" +
+		"\n参加できる方は:ok: 絵文字、参加できない方は:ng: 絵文字でお知らせください。"
 
 	d := RequestData{
 		Text: text,
@@ -184,7 +189,7 @@ func main() {
 
 	fmt.Println(cc.URL)
 
-	res, err := postSlack(cc, apiURL)
+	res, err := postSlack(cc, apiURL, pointsStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
