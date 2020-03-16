@@ -1,0 +1,31 @@
+FROM golang:1.14.0 as builder
+
+WORKDIR /go/src/github.com/yuta1402/t2km-problem-generator
+
+COPY . .
+
+RUN make local/deps
+RUN go build -a -o t2kmpg .
+
+
+FROM debian:stretch
+
+ENV PHANTOMJS_BIN_URL https://github.com/fg2it/phantomjs-on-raspberry/releases/download/v2.1.1-wheezy-jessie/phantomjs
+
+WORKDIR /root/
+
+RUN apt update && \
+    apt install -y --no-install-recommends \
+        ca-certificates \
+        bzip2 \
+        libfontconfig \
+        curl \
+        make && \
+    apt clean
+
+RUN curl -o /usr/local/bin/phantomjs -sSL ${PHANTOMJS_BIN_URL}
+RUN chmod a+x /usr/local/bin/phantomjs
+
+COPY --from=builder /go/src/github.com/yuta1402/t2km-problem-generator/t2kmpg .
+
+CMD ["./t2kmpg"]
