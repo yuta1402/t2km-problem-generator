@@ -150,14 +150,25 @@ func main() {
 		return
 	}
 
+	fmt.Println("Selecting problems...")
+
 	problems, err := problem.New()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
 	}
 	probs := problems.RandomSelectByPoints(points)
-	fmt.Println("Selected Problems:")
-	fmt.Println(probs)
+	fmt.Println("Selected problems:")
+	for _, v := range probs {
+		s := "  "
+
+		s += "Point: " + strconv.Itoa(int(v.Point)) + ", " +
+			"ContestID: " + v.ContestID + ", " +
+			"ID: " + v.ID + ", " +
+			"Title: " + v.Title
+
+		fmt.Println(s)
+	}
 
 	cg, err := contest.NewContestGenerator(id, password)
 	if err != nil {
@@ -166,11 +177,15 @@ func main() {
 	}
 	defer cg.Close()
 
+	fmt.Println("Trying to login to AtCoder Virtual Contest...")
+
 	err = cg.Login()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error: failed to login")
 		return
 	}
+
+	fmt.Println("Login success.")
 
 	option := contest.Option{
 		NamePrefix:  namePrefix,
@@ -182,13 +197,23 @@ func main() {
 		Problems:    probs,
 	}
 
+	fmt.Println("Creating contet...")
+
 	cc, err := cg.Generate(option)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		return
 	}
 
-	fmt.Println(cc.URL)
+	fmt.Println("Created contest:")
+	fmt.Println("  Name: " + cc.Option.Name)
+	fmt.Println("  Description: " + cc.Option.Description)
+	fmt.Println("  StartTime: " + cc.Option.StartTime.Format("2006/01/02 15:04"))
+	fmt.Println("  EndTime: " + cc.Option.EndTime.Format("2006/01/02 15:04"))
+	fmt.Println("  PenaltyMin: " + strconv.Itoa(cc.Option.PenaltyMin))
+	fmt.Println("  URL: " + cc.URL)
+
+	fmt.Println("Posting to slack...")
 
 	res, err := postSlack(cc, apiURL, pointsStr)
 	if err != nil {
@@ -196,5 +221,5 @@ func main() {
 		return
 	}
 
-	fmt.Println(res.Status)
+	fmt.Println("Status :" + res.Status)
 }
