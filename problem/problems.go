@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 )
 
 const (
@@ -55,6 +56,24 @@ func New() (Problems, error) {
 	}
 
 	return problems, nil
+}
+
+func (p Problems) String() string {
+	s := ""
+
+	for i, v := range p {
+		s += "  "
+		s += "Point: " + strconv.Itoa(int(v.Point)) + ", " +
+			"ContestID: " + v.ContestID + ", " +
+			"ID: " + v.ID + ", " +
+			"Title: " + v.Title
+
+		if i < len(p)-1 {
+			s += "\n"
+		}
+	}
+
+	return s
 }
 
 func (p Problems) RandomSelectByPoints(points []float64) Problems {

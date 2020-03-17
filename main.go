@@ -156,6 +156,7 @@ func main() {
 		return
 	}
 	probs := problems.RandomSelectByPoints(points)
+	fmt.Println("Selected Problems:")
 	fmt.Println(probs)
 
 	cg, err := contest.NewContestGenerator(id, password)
